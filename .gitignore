@@ -1,0 +1,48 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Data Files (optional - remove if you want to commit sample data)
+Data/reddit_posts.json
+Data/reddit_posts.txt
+Data/Career_Insights_for_Students.pdf
+
+# Environment Variables
+.env
+.env.local
+
+# OS
+Thumbs.db
+.DS_Store
