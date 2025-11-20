@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Get real-world career insights from 100+ engineers. Free PDF guide for students and early-career professionals.">
+    <meta name="keywords" content="engineering career, career advice, student resources, career insights">
+    <title>Engineering Career Insights - Learn from Real Engineers</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🎓 Career Insights</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#signup">Get PDF</a></li>
+                <li><a href="https://github.com/MrWeeb0/Career-Insight-Reddit" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Real Career Advice from 100+ Engineers</h1>
+            <p>Get unfiltered insights about salaries, work-life balance, career growth, and industry secrets</p>
+            <a href="#signup" class="cta-button">Download Free PDF</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>What You'll Learn</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Salary Reality</h3>
+                    <p>Real salary ranges across different specializations and experience levels</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Career Paths</h3>
+                    <p>Different specializations and how to choose the right path for you</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚖️</div>
+                    <h3>Work-Life Balance</h3>
+                    <p>Industry insights on work hours, flexibility, and quality of life</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>Tools & Skills</h3>
+                    <p>Most demanded skills and tools you should learn</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Community</h3>
+                    <p>Learn from real engineers' experiences and mistakes</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Market Insights</h3>
+                    <p>Industry trends and what's coming next</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About This Project</h2>
+            <p>This project aggregates real career advice from r/AskEngineers on Reddit, organized into 5 chapters covering the most important topics for engineering students and early-career professionals.</p>
+            <p style="margin-top: 20px;"><strong>Chapters Included:</strong></p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>Chapter 1: The Transition - From Student to Engineer</li>
+                <li>Chapter 2: Expectations vs. Reality</li>
+                <li>Chapter 3: Career Strategy & Growth</li>
+                <li>Chapter 4: Workplace Dynamics & Ethics</li>
+                <li>Chapter 5: General Discussions</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Signup Section -->
+    <section id="signup" class="signup">
+        <div class="container">
+            <h2>Get Your Free PDF</h2>
+            <p>Enter your email and name to receive the complete guide</p>
+            
+            <form id="emailForm">
+                <div class="form-group">
+                    <input type="text" id="name" name="name" placeholder="Your Name" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder="Your Email" required autocomplete="email">
+                </div>
+                <button type="submit" id="submitButton">
+                    <span id="buttonText">Download Free Report</span>
+                    <span id="buttonLoader" style="display: none;">⏳ Sending...</span>
+                </button>
+            </form>
+            
+            <div id="formMessage"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Engineering Career Insights. <a href="https://github.com/MrWeeb0/Career-Insight-Reddit">Open Source on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
