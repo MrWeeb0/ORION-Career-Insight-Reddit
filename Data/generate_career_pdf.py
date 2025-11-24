@@ -1,16 +1,21 @@
 import json
 import re
 import os
+import sys
+import argparse
+from dotenv import load_dotenv
 from reportlab.lib.pagesizes import LETTER
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
 from reportlab.lib import colors
 
+# Load environment variables from .env file
+load_dotenv()
+
 # --- Configuration ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, 'reddit_posts.json')
-OUTPUT_PDF = os.path.join(SCRIPT_DIR, 'Career_Insights_for_Students.pdf')
+DEFAULT_SUBREDDIT = os.getenv("SUBREDDIT", "engineering")
 
 def clean_text(text):
     """Cleans up Reddit Markdown/HTML artifacts."""
@@ -28,21 +33,21 @@ def get_category(title, text):
     content = (title + " " + text).lower()
     
     categories = {
-        "Chapter 1: The Transition (Student to Engineer)": [
+        "Chapter 1: The Transition (Student/Entry-Level)": [
             "student", "grad", "degree", "knowledge", "first job", "early career", 
-            "imposter", "stagnat", "learn", "university", "college"
+            "imposter", "stagnat", "learn", "university", "college", "entry", "junior"
         ],
         "Chapter 2: Expectations vs. Reality": [
-            "reality", "boring", "bored", "hate", "depress", "autocad", "paperwork", 
-            "square pipe", "day in the life", "expect", "bad"
+            "reality", "boring", "bored", "hate", "depress", "paperwork", 
+            "day in the life", "expect", "bad", "not what", "thought"
         ],
         "Chapter 3: Career Strategy & Growth": [
             "promotion", "mba", "salary", "raise", "consulting", "career path", 
-            "pigeonhole", "industry", "future", "manager"
+            "pigeonhole", "industry", "future", "manager", "leadership"
         ],
         "Chapter 4: Workplace Dynamics & Ethics": [
-            "boss", "holiday", "politics", "ethics", "pinto", "communication", 
-            "skill", "soft skill", "management", "respect", "fired"
+            "boss", "holiday", "politics", "ethics", "communication", 
+            "skill", "soft skill", "management", "respect", "fired", "team"
         ]
     }
     
@@ -52,17 +57,30 @@ def get_category(title, text):
             
     return "Chapter 5: General Discussions & Advice"
 
-def create_pdf():
+def create_pdf(subreddit, input_file=None, output_file=None, output_dir=None):
+    """Create PDF from JSON data"""
+    # Set default file paths if not provided
+    if input_file is None:
+        input_file = os.path.join(SCRIPT_DIR, f'{subreddit}_posts.json')
+    if output_dir is None:
+        output_dir = SCRIPT_DIR
+    if output_file is None:
+        output_file = os.path.join(output_dir, f'Career_Insights_{subreddit.title()}.pdf')
+    else:
+        # If output_file is just a filename, use output_dir
+        if not os.path.dirname(output_file):
+            output_file = os.path.join(output_dir, output_file)
+    
     # Load Data
     try:
-        with open(INPUT_FILE, 'r', encoding='utf-8') as f:
+        with open(input_file, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: {INPUT_FILE} not found. Please ensure the JSON file is in the same directory.")
-        return
-
+        print(f"Error: {input_file} not found. Please ensure the JSON file exists.")
+        return False
+    
     # Setup PDF Document
-    doc = SimpleDocTemplate(OUTPUT_PDF, pagesize=LETTER,
+    doc = SimpleDocTemplate(output_file, pagesize=LETTER,
                             rightMargin=72, leftMargin=72,
                             topMargin=72, bottomMargin=72)
     
@@ -80,11 +98,11 @@ def create_pdf():
 
     # --- Cover Page ---
     story.append(Spacer(1, 100))
-    story.append(Paragraph("Career Insight for Students", styles['CoverTitle']))
+    story.append(Paragraph("Career Insights for Students", styles['CoverTitle']))
     story.append(Spacer(1, 12))
-    story.append(Paragraph("Real-World Stories & Advice from r/AskEngineers", styles['CoverSub']))
+    story.append(Paragraph(f"Real-World Stories & Advice from r/{subreddit} Community", styles['CoverSub']))
     story.append(Spacer(1, 50))
-    story.append(Paragraph("Generated from user discussions regarding career paths, workplace ethics, and engineering reality.", styles['Normal']))
+    story.append(Paragraph("Generated from user discussions regarding career paths, workplace dynamics, and professional growth.", styles['Normal']))
     story.append(PageBreak())
 
     # --- Process Data ---
@@ -162,9 +180,36 @@ def create_pdf():
     # Generate
     try:
         doc.build(story)
-        print(f"Success! PDF created at: {os.path.abspath(OUTPUT_PDF)}")
+        print(f"✓ Success! PDF created at: {os.path.abspath(output_file)}")
+        return True
     except Exception as e:
-        print(f"An error occurred while creating the PDF: {e}")
+        print(f"❌ An error occurred while creating the PDF: {e}")
+        return False
+
+def main():
+    """Main execution with command-line argument support"""
+    parser = argparse.ArgumentParser(description="Generate Career Insights PDF from Reddit data")
+    parser.add_argument("--subreddit", type=str, default=DEFAULT_SUBREDDIT,
+                       help=f"Subreddit name (used for filenames, default: {DEFAULT_SUBREDDIT})")
+    parser.add_argument("--input", type=str, default=None,
+                       help="Input JSON file (default: {subreddit}_posts.json in same directory)")
+    parser.add_argument("--output", type=str, default=None,
+                       help="Output PDF file (default: Career_Insights_{Subreddit}.pdf)")
+    parser.add_argument("--output-dir", type=str, default=None,
+                       help="Output directory for PDF (default: same as script directory)")
+    
+    args = parser.parse_args()
+    
+    # Set default input if not provided
+    if args.input is None:
+        args.input = os.path.join(SCRIPT_DIR, f"{args.subreddit}_posts.json")
+    
+    # Set default output if not provided
+    if args.output is None:
+        args.output = f"Career_Insights_{args.subreddit.title()}.pdf"
+    
+    success = create_pdf(args.subreddit, args.input, args.output, args.output_dir)
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
-    create_pdf()
+    main()

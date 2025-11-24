@@ -1,16 +1,17 @@
-# Engineering Career Insights Scraper
+# Career Insights Scraper
 
-A Python tool that scrapes Reddit's r/AskEngineers subreddit for career-related discussions and generates beautifully formatted documents for engineering students.
+A flexible Python tool that scrapes Reddit for career-related discussions and generates beautifully formatted documents for students and professionals. Support for any subreddit!
 
 ## 🎯 Goal
 
-Provide real-world career guidance and insights for engineering students by aggregating discussions, salary expectations, and work-life balance perspectives from practicing engineers.
+Provide real-world career guidance and insights by aggregating discussions, salary expectations, and work-life balance perspectives from Reddit communities.
 
 ## ✨ Features
 
-- **Reddit API Scraping**: Fetches career-related posts from r/AskEngineers with proper rate limiting
+- **Flexible Multi-Subreddit Support**: Scrape any subreddit for career insights
+- **Reddit API Scraping**: Fetches career-related posts with proper rate limiting
 - **Smart Categorization**: Organizes posts into 5 thematic chapters:
-  1. The Transition (Student to Engineer)
+  1. The Transition (Student/Entry-Level)
   2. Expectations vs. Reality
   3. Career Strategy & Growth
   4. Workplace Dynamics & Ethics
@@ -21,6 +22,7 @@ Provide real-world career guidance and insights for engineering students by aggr
   - 📊 **JSON**: Raw data for further analysis
 - **Community Insights**: Extracts top comments from discussions
 - **Rate Limiting**: Respects Reddit API limits with 2-second delays
+- **Environment Configuration**: Customizable via `.env` file
 
 ## 📋 Prerequisites
 
@@ -32,8 +34,8 @@ Provide real-world career guidance and insights for engineering students by aggr
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/engineering-career-insights.git
-cd engineering-career-insights
+git clone https://github.com/MrWeeb0/Career-Insight-Reddit.git
+cd Career-Insight-Reddit
 ```
 
 2. **Create and activate virtual environment**
@@ -52,32 +54,95 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+4. **Configure environment**
+```bash
+# Copy example file
+cp .env.example .env
+
+# Edit .env with your preferred settings
+```
+
 ## 💻 Usage
 
-### 1. Scrape Reddit and Generate Insights
+### Quick Start (Default: r/engineering)
 
 ```bash
 python main.py
 ```
 
-This will:
-- Search r/AskEngineers for "Career" keyword
-- Fetch 100 relevant posts
-- Extract top comments from top 10 posts
-- Generate formatted output files
+This runs a complete pipeline:
+1. Scrapes r/engineering for "Career" posts
+2. Generates JSON, text, and PDF files automatically
 
-**Output files:**
-- `Data/reddit_posts.json` - Raw post data
-- `Data/reddit_posts.txt` - Formatted student insights
-- `Data/Career_Insights_for_Students.pdf` - Professional PDF document
-
-### 2. Generate PDF from JSON
+### Scrape Different Subreddits
 
 ```bash
-python Data/generate_career_pdf.py
+# Scrape r/learnprogramming (with automatic PDF generation)
+python main.py --subreddit learnprogramming
+
+# Scrape r/askengineers with custom search term
+python main.py --subreddit askengineers --search "salary"
+
+# Scrape with custom limit
+python main.py --subreddit engineering --limit 200
+
+# Custom output directory
+python main.py --subreddit engineering --output-dir MyData
 ```
 
-This converts the JSON data into a formatted PDF with chapters and styling.
+### Scraping Only (Skip PDF Generation)
+
+```bash
+# Scrape without generating PDF
+python main.py --no-pdf
+
+# Useful for quick data collection
+python main.py --subreddit engineering --no-pdf
+```
+
+### Standalone PDF Generation
+
+If you need to regenerate PDFs without scraping:
+
+```bash
+# Generate PDF from existing data
+python Data/generate_career_pdf.py --subreddit learnprogramming
+
+# Custom input/output files
+python Data/generate_career_pdf.py --subreddit engineering --input Data/custom_posts.json --output Data/output.pdf
+```
+
+## ⚙️ Configuration
+
+### Environment File (.env)
+
+Create a `.env` file (copy from `.env.example`):
+
+```env
+# Reddit Scraper Configuration
+SUBREDDIT=engineering
+SEARCH_TERM=Career
+POSTS_LIMIT=100
+OUTPUT_DIR=Data
+```
+
+**Configuration Options:**
+- `SUBREDDIT`: Default subreddit to scrape (without r/ prefix)
+- `SEARCH_TERM`: Default search keyword
+- `POSTS_LIMIT`: Maximum posts to fetch
+- `OUTPUT_DIR`: Output directory for files
+
+### Command-Line Arguments
+
+All `.env` defaults can be overridden via command-line:
+
+```bash
+# Override environment settings
+python main.py --subreddit learnprogramming --search "career" --limit 50
+
+# PDF generation with custom settings
+python Data/generate_career_pdf.py --subreddit learnprogramming
+```
 
 ## 📊 Output Format
 
@@ -96,7 +161,7 @@ This converts the JSON data into a formatted PDF with chapters and styling.
     "score": 372,
     "num_comments": 527,
     "selftext": "Post content...",
-    "permalink": "/r/AskEngineers/comments/...",
+    "permalink": "/r/subreddit/comments/...",
     "created_utc": 1656432191
   }
 ]
@@ -109,22 +174,38 @@ This converts the JSON data into a formatted PDF with chapters and styling.
 👤 Posted by: u/author
 📈 Engagement: 372 upvotes | 527 comments
 📅 Date: Jun 28, 2022
-🔗 Link: https://reddit.com/r/AskEngineers/...
+🔗 Link: https://reddit.com/r/subreddit/...
 
 💬 TOP INSIGHT FROM COMMUNITY:
    By u/top_commenter (⬆️ 558 upvotes)
    "Comment text..."
 ```
 
-## 🔧 Configuration
+## 📁 Output Files
 
-Edit these variables in `main.py` to customize:
+Scripts organize outputs into type-specific subdirectories:
 
-```python
-USER_AGENT = "Mozilla/5.0 (compatible; YourApp/1.0; +http://yoursite)"
-SUBREDDIT = "askengineers"
-SEARCH_TERM = "Career"
 ```
+Data/
+├── pdf/
+│   ├── Career_Insights_Engineering.pdf
+│   ├── Career_Insights_Learnprogramming.pdf
+│   └── Career_Insights_Cscareerquestions.pdf
+├── json/
+│   ├── engineering_posts.json
+│   ├── learnprogramming_posts.json
+│   └── cscareerquestions_posts.json
+├── txt/
+│   ├── engineering_posts.txt
+│   ├── learnprogramming_posts.txt
+│   └── cscareerquestions_posts.txt
+└── generate_career_pdf.py
+```
+
+**All files are organized by type:**
+- **pdf/**: Professional documents with categorized chapters
+- **json/**: Raw post data for analysis
+- **txt/**: Formatted human-readable insights
 
 ## 📚 API Details
 
@@ -136,15 +217,42 @@ This project respects Reddit API guidelines:
 - ✅ Handles 429 rate limit errors gracefully
 - ✅ Uses `restrict_sr=1` for subreddit-only searches
 
-## 📝 Student Takeaways
+## 💡 Example Workflows
 
-The generated documents provide insights on:
+### Complete Pipeline: Scrape & Generate PDF
 
-1. **Career Growth**: Transitions, skill development, industry paths
-2. **Salary Expectations**: Real-world compensation data
-3. **Work-Life Balance**: Job satisfaction, workplace culture
-4. **Field-Specific Advice**: Specialization insights
-5. **Decision-Making**: Help choosing career paths
+```bash
+# Engineering career insights (scrapes + generates PDF)
+python main.py --subreddit engineering
+
+# Software development careers
+python main.py --subreddit learnprogramming
+
+# Programming careers
+python main.py --subreddit cscareerquestions
+```
+
+### Scrape Multiple Subreddits in Batch
+
+```bash
+# Scrape all without generating PDFs first
+python main.py --subreddit engineering --no-pdf
+python main.py --subreddit learnprogramming --no-pdf
+python main.py --subreddit cscareerquestions --no-pdf
+
+# Then generate all PDFs manually
+python Data/generate_career_pdf.py --subreddit engineering
+python Data/generate_career_pdf.py --subreddit learnprogramming
+python Data/generate_career_pdf.py --subreddit cscareerquestions
+```
+
+### Custom Search Across Subreddits
+
+```bash
+# Complete pipeline with custom search terms
+python main.py --subreddit engineering --search "salary negotiation"
+python main.py --subreddit engineering --search "work life balance"
+```
 
 ## 🤝 Contributing
 
@@ -185,27 +293,36 @@ For questions or support:
 
 ## 🎓 Educational Use
 
-This project is designed for educational purposes. Students can:
-- Learn about real-world engineering careers
+This project is designed for educational purposes. Users can:
+- Learn about real-world career insights
 - Understand industry expectations
 - Make informed career decisions
-- Connect with experienced engineers
+- Compare career paths across fields
 
-## 📊 Data Sources
+## 📊 Supported Subreddits
 
-All data is aggregated from public discussions on [r/AskEngineers](https://www.reddit.com/r/AskEngineers/), a community of engineers sharing career and technical insights.
+Works with any subreddit! Some popular options:
+- `engineering` - Engineering careers and insights
+- `askengineers` - Engineering Q&A
+- `learnprogramming` - Programming education
+- `cscareerquestions` - Computer science careers
+- `webdev` - Web development careers
+- `Python` - Python development
+- `java` - Java development
+- And many more!
 
 ## 🔮 Future Enhancements
 
-- [ ] Multi-subreddit support
 - [ ] Interactive web dashboard
-- [ ] Custom keyword searches
 - [ ] Time-based trend analysis
 - [ ] Career path recommendations
 - [ ] Salary trend visualization
 - [ ] Export to Excel/CSV
-- [ ] PostgreSQL database integration
+- [ ] Database integration
+- [ ] Advanced filtering options
+- [ ] Sentiment analysis
 
 ---
 
-**Made with ❤️ for engineering students by the community**
+**Made with ❤️ for career explorers and students**
+

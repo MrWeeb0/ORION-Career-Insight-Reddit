@@ -2,7 +2,14 @@ import requests
 import json
 import time
 import sys
+import os
+import argparse
+import subprocess
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Fix console encoding for emojis
 if sys.stdout.encoding != 'utf-8':
@@ -10,8 +17,12 @@ if sys.stdout.encoding != 'utf-8':
 
 # Reddit API Configuration
 USER_AGENT = "Mozilla/5.0 (compatible; EngineerPath/1.0; +http://localhost)"
-SUBREDDIT = "askengineers"
-SEARCH_TERM = "Career"
+
+# Load defaults from environment variables
+DEFAULT_SUBREDDIT = os.getenv("SUBREDDIT", "engineering")
+DEFAULT_SEARCH_TERM = os.getenv("SEARCH_TERM", "Career")
+DEFAULT_LIMIT = int(os.getenv("POSTS_LIMIT", "100"))
+DEFAULT_OUTPUT_DIR = os.getenv("OUTPUT_DIR", "Data")
 
 def fetch_with_rate_limit(url, params=None):
     """Fetch URL with rate limiting and error handling"""
@@ -32,9 +43,9 @@ def fetch_with_rate_limit(url, params=None):
         print(f"❌ Error fetching {url}: {e}")
         return None
 
-def search_subreddit(search_term, limit=100):
+def search_subreddit(subreddit, search_term, limit=100):
     """Search subreddit for a term"""
-    url = f"https://www.reddit.com/r/{SUBREDDIT}/search.json"
+    url = f"https://www.reddit.com/r/{subreddit}/search.json"
     params = {
         "q": search_term,
         "restrict_sr": 1,
@@ -44,9 +55,9 @@ def search_subreddit(search_term, limit=100):
     }
     return fetch_with_rate_limit(url, params)
 
-def get_top_comment(post_id):
+def get_top_comment(subreddit, post_id):
     """Get top comment for a post"""
-    url = f"https://www.reddit.com/r/{SUBREDDIT}/comments/{post_id}.json"
+    url = f"https://www.reddit.com/r/{subreddit}/comments/{post_id}.json"
     params = {"raw_json": 1, "limit": 1}
     data = fetch_with_rate_limit(url, params)
     
@@ -61,15 +72,15 @@ def get_top_comment(post_id):
             }
     return None
 
-def format_for_students(posts):
+def format_for_students(posts, subreddit):
     """Format posts into student-friendly career insights"""
     formatted = ""
     formatted += "\n" + "="*100 + "\n"
-    formatted += "🎓 ENGINEERING CAREER INSIGHTS - From r/AskEngineers Community\n"
+    formatted += f"🎓 CAREER INSIGHTS - From r/{subreddit} Community\n"
     formatted += "="*100 + "\n"
     formatted += f"📊 Total Posts Analyzed: {len(posts)}\n"
     formatted += f"📅 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-    formatted += f"\n💡 GOAL: Provide career guidance for engineering students\n"
+    formatted += f"\n💡 GOAL: Provide career guidance for students\n"
     formatted += "="*100 + "\n\n"
     
     for i, post_wrapper in enumerate(posts[:30], 1):  # Top 30 posts for readability
@@ -106,7 +117,7 @@ def format_for_students(posts):
         
         # Top comment (for first 10 posts)
         if i <= 10:
-            top_comment = get_top_comment(post_id)
+            top_comment = get_top_comment(subreddit, post_id)
             if top_comment:
                 formatted += f"\n💬 TOP INSIGHT FROM COMMUNITY:\n"
                 formatted += f"   By u/{top_comment['author']} (⬆️ {top_comment['score']} upvotes)\n"
@@ -116,45 +127,101 @@ def format_for_students(posts):
     
     # Summary section
     formatted += "\n" + "="*100 + "\n"
-    formatted += "📚 STUDENT TAKEAWAYS\n"
+    formatted += "📚 KEY TAKEAWAYS\n"
     formatted += "="*100 + "\n\n"
     formatted += "1️⃣  CAREER GROWTH: Browse discussions about career transitions, skill development, and industry insights.\n"
-    formatted += "2️⃣  SALARY EXPECTATIONS: Find real-world salary ranges and compensation discussions from practicing engineers.\n"
-    formatted += "3️⃣  WORK-LIFE BALANCE: Read experiences about job satisfaction, workplace culture, and career satisfaction.\n"
-    formatted += "4️⃣  FIELD-SPECIFIC ADVICE: Learn from engineers in various specializations (ME, EE, Civil, etc).\n"
-    formatted += "5️⃣  DECISION-MAKING: Get insights to help decide your career path and specialization.\n\n"
-    formatted += "🎯 ACTION ITEMS FOR STUDENTS:\n"
+    formatted += "2️⃣  SALARY EXPECTATIONS: Find real-world salary ranges and compensation discussions.\n"
+    formatted += "3️⃣  WORK-LIFE BALANCE: Read experiences about job satisfaction and workplace culture.\n"
+    formatted += "4️⃣  FIELD-SPECIFIC ADVICE: Learn from professionals in various specializations.\n"
+    formatted += "5️⃣  DECISION-MAKING: Get insights to help decide your career path.\n\n"
+    formatted += "🎯 ACTION ITEMS:\n"
     formatted += "   ✓ Visit the full discussion threads (links above) for more detailed conversations\n"
     formatted += "   ✓ Ask follow-up questions in the community threads\n"
-    formatted += "   ✓ Connect with engineers in your field of interest\n"
-    formatted += "   ✓ Use these insights to plan your internships and specializations\n\n"
+    formatted += "   ✓ Connect with professionals in your field of interest\n"
+    formatted += "   ✓ Use these insights to plan your career development\n\n"
     formatted += "="*100 + "\n"
     
     return formatted
 
-# Main execution
-print("\n" + "="*80)
-print(f"REDDIT SCRAPER: Searching r/{SUBREDDIT} for '{SEARCH_TERM}'")
-print("="*80 + "\n")
+def main():
+    """Main execution with command-line argument support"""
+    parser = argparse.ArgumentParser(description="Scrape Reddit for career-related posts")
+    parser.add_argument("--subreddit", type=str, default=DEFAULT_SUBREDDIT, 
+                       help=f"Subreddit to search (default: {DEFAULT_SUBREDDIT})")
+    parser.add_argument("--search", type=str, default=DEFAULT_SEARCH_TERM, 
+                       help=f"Search term (default: {DEFAULT_SEARCH_TERM})")
+    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT,
+                       help=f"Maximum posts to fetch (default: {DEFAULT_LIMIT})")
+    parser.add_argument("--output-dir", type=str, default=DEFAULT_OUTPUT_DIR,
+                       help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})")
+    parser.add_argument("--no-pdf", action="store_true",
+                       help="Skip PDF generation (only scrape)")
+    
+    args = parser.parse_args()
+    
+    # Ensure output directory exists
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    # Create subdirectories for organizing outputs
+    json_dir = os.path.join(args.output_dir, "json")
+    txt_dir = os.path.join(args.output_dir, "txt")
+    pdf_dir = os.path.join(args.output_dir, "pdf")
+    os.makedirs(json_dir, exist_ok=True)
+    os.makedirs(txt_dir, exist_ok=True)
+    os.makedirs(pdf_dir, exist_ok=True)
+    
+    print("\n" + "="*80)
+    print(f"REDDIT SCRAPER: Searching r/{args.subreddit} for '{args.search}'")
+    print("="*80 + "\n")
+    
+    # Search for posts
+    search_results = search_subreddit(args.subreddit, args.search, args.limit)
+    if not search_results:
+        print("❌ Failed to fetch search results")
+        sys.exit(1)
+    
+    posts = search_results.get("data", {}).get("children", [])
+    print(f"✓ Found {len(posts)} posts\n")
+    
+    # Format for students
+    formatted_output = format_for_students(posts, args.subreddit)
+    print(formatted_output)
+    
+    # Save results in organized subdirectories
+    json_file = os.path.join(json_dir, f"{args.subreddit}_posts.json")
+    txt_file = os.path.join(txt_dir, f"{args.subreddit}_posts.txt")
+    
+    with open(json_file, "w", encoding="utf-8") as f:
+        json.dump(posts, f, indent=2, ensure_ascii=False)
+    
+    with open(txt_file, "w", encoding="utf-8") as f:
+        f.write(formatted_output)
+    
+    print(f"✓ Results saved to {json_file} and {txt_file}")
+    
+    # Generate PDF automatically (unless skipped)
+    if not args.no_pdf:
+        print("\n" + "="*80)
+        print("GENERATING PDF...")
+        print("="*80 + "\n")
+        
+        try:
+            pdf_script = os.path.join(args.output_dir, "generate_career_pdf.py")
+            subprocess.run(
+                [sys.executable, pdf_script, "--subreddit", args.subreddit, 
+                 "--input", json_file, "--output-dir", pdf_dir],
+                check=True,
+                capture_output=False
+            )
+            print("\n✓ Pipeline complete! All files generated.")
+        except subprocess.CalledProcessError as e:
+            print(f"\n⚠️ Warning: PDF generation failed: {e}")
+            print("You can manually generate the PDF with:")
+            print(f"  python Data/generate_career_pdf.py --subreddit {args.subreddit}")
+        except FileNotFoundError:
+            print(f"\n⚠️ Warning: PDF script not found at {pdf_script}")
+            print("You can manually generate the PDF with:")
+            print(f"  python Data/generate_career_pdf.py --subreddit {args.subreddit}")
 
-# Search for posts
-search_results = search_subreddit(SEARCH_TERM)
-if not search_results:
-    print("❌ Failed to fetch search results")
-    sys.exit(1)
-
-posts = search_results.get("data", {}).get("children", [])
-print(f"✓ Found {len(posts)} posts\n")
-
-# Format for students
-formatted_output = format_for_students(posts)
-print(formatted_output)
-
-# Save results
-with open("Data/reddit_posts.json", "w", encoding="utf-8") as f:
-    json.dump(posts, f, indent=2, ensure_ascii=False)
-
-with open("Data/reddit_posts.txt", "w", encoding="utf-8") as f:
-    f.write(formatted_output)
-
-print("✓ Results saved to Data/reddit_posts.json and Data/reddit_posts.txt")
+if __name__ == "__main__":
+    main()
